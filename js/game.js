@@ -1,21 +1,14 @@
-import { clickCard } from "./memory.js";
+import { game as gController } from "./memory.js";
 
-document.getElementById('co1').addEventListener('click', 
-function () { 
-    clickCard("co") 
+var game = $('#game');
+
+gController.init(updateSRC).forEach(function(card, indx){
+    game.append('<img id="c'+indx+'" class="card" title="card">');
+    card.pointer = $('#c'+indx);
+    card.pointer.on('click', () => gController.click(card));
+    card.pointer.attr("src", card.current);
 });
 
-document.getElementById('co2').addEventListener('click', 
-function () { 
-    clickCard("co") 
-});
-
-document.getElementById('cb1').addEventListener('click', 
-function () {
-    clickCard("cb")
-});
-
-document.getElementById('cb2').addEventListener('click', 
-function () {
-    clickCard("cb")
-});
+function updateSRC(){
+    this.pointer.attr("src", this.current);
+}
