@@ -1,16 +1,63 @@
-#title, .center{
-	display: block;
-	margin-left: auto;
-	margin-right: auto;
+html, body {
+    height: 100%;
+    margin: 0;
+    padding: 0;
 }
 
-button.center{
-	width: 6rem;
-	height: 3rem;
-	margin-top: 1rem;
+body {
+    background-image: linear-gradient(to bottom, #f0f0f0, #c0c0c0); /* Gradiente para el fondo */
+    font-family: Arial, sans-serif; /* Tipo de fuente */
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
 }
 
-#title{
-	color:red;
-	text-align: center;
+#title {
+    color: #333; /* Color del texto del título */
+    font-size: 4rem; /* Tamaño de fuente del título */
+    margin-top: 2rem; /* Espacio superior */
+    text-align: center; /* Centrar el título */
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3); /* Sombra de texto */
 }
+
+.button-container {
+    margin-top: 2rem; /* Espacio superior para los botones */
+}
+
+button.center {
+    display: block; /* Hacer que los botones sean elementos de bloque */
+    width: 14rem; /* Ancho de los botones */
+    height: 5rem; /* Altura de los botones */
+    margin: 0 auto 2rem; /* Margen inferior para separar los botones */
+    background-image: linear-gradient(to bottom, #52be56, #38923c); /* Gradiente para los botones */
+    color: #f0f0f0; /* Color del texto del botón (mismo color que el fondo) */
+    font-size: 1.8rem; /* Tamaño de fuente */
+    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif; /* Otra fuente */
+    border: none; /* Sin borde */
+    border-radius: 20px; /* Bordes más redondeados */
+    cursor: pointer; /* Cambia el cursor al pasar sobre el botón */
+    transition: background-color 0.3s, box-shadow 0.3s; /* Transiciones suaves */
+    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2); /* Sombra */
+    outline: none; /* Sin contorno */
+}
+
+button.center:hover {
+    background-image: linear-gradient(to bottom, #45a049, #357c37); /* Cambia el gradiente al pasar sobre el botón */
+}
+
+button.center:active {
+    background-image: linear-gradient(to bottom, #3e8e41, #2f6f2d); /* Cambia el gradiente al hacer clic en el botón */
+    transform: translateY(2px); /* Efecto de clic */
+    box-shadow: none; /* Elimina la sombra al hacer clic */
+}
+
+.button-container::after {
+    content: '';
+    display: block;
+    width: 100%;
+    height: 1px;
+    background-color: #aaa;
+    margin-top: 1.5rem;
+}
+
