@@ -2,31 +2,46 @@ export var game = function(){
     const back = '../resources/back.png';
     const resources = ['../resources/cb.png', '../resources/co.png', '../resources/sb.png','../resources/so.png', '../resources/tb.png','../resources/to.png'];
 
+    var lastCard;
+    var pairs = 2;
+    var points = 100;
+    var miss = 25;
+    var time = 1000;
+
     const card = {
         current: back,
         clickable: true,
-        callback: null, // Agregamos una propiedad para almacenar el callback
+        callback: null,
 
         goBack: function () {
             setTimeout(() => {
                 this.current = back;
                 this.clickable = true;
-                this.callback(); // Llamamos al callback para actualizar la visualización
-            }, 1000);
+                this.callback();
+            }, time);
         },
         goFront: function () {
             this.current = this.front;
             this.clickable = false;
-            this.callback(); // Llamamos al callback para actualizar la visualización
+            this.callback();
         }
     };
 
-    var lastCard;
-    var pairs = 2;
-    var points = 100;
-
     return {
         init: function (call) {
+            var savedOptions = JSON.parse(localStorage.getItem('options'));
+            if (savedOptions) {
+                pairs = savedOptions.pairs;
+                if (savedOptions.difficulty === "easy"){
+                    miss=10;
+                    time=2000;
+                }
+                else if (savedOptions.difficulty === "hard"){
+                    miss=40;
+                    time=500;
+                }
+
+            }
             var items = resources.slice();
             items.sort(() => Math.random() - 0.5);
             items = items.slice(0, pairs);
@@ -34,8 +49,8 @@ export var game = function(){
             items.sort(() => Math.random() - 0.5);
             return items.map(item => {
                 var newCard = Object.create(card);
-                newCard.front = item; // Asignamos el frente de la carta
-                newCard.callback = call; // Asignamos el callback para actualizar la visualización
+                newCard.front = item;
+                newCard.callback = call;
                 newCard.current = item;
                 return newCard;
             });
@@ -53,7 +68,7 @@ export var game = function(){
                     }
                 } else {
                     [card, lastCard].forEach(c => c.goBack());
-                    points -= 25;
+                    points -= miss;
                     if (points <= 0) {
                         alert("Has perdido");
                         window.location.replace("../");
@@ -65,7 +80,7 @@ export var game = function(){
             }
         },
         flipAllCards: function (cards) {
-                cards.forEach(card => card.goBack()); // Después de un segundo, volteamos todas las cartas
+                cards.forEach(card => card.goBack());
         }
     };
 }();

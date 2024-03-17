@@ -16,7 +16,6 @@ function updateSRC(){
     $(this.pointer).attr("src", this.current);
 }
 
-// Llama a la función flipAllCards después de un segundo
 setTimeout(function() {
     gController.flipAllCards(cards);
 }, 0);

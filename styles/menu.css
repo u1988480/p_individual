@@ -5,8 +5,8 @@ html, body {
 }
 
 body {
-    background-image: linear-gradient(to bottom, #f0f0f0, #c0c0c0); /* Gradiente para el fondo */
-    font-family: Arial, sans-serif; /* Tipo de fuente */
+    background-image: linear-gradient(to bottom, #f0f0f0, #c0c0c0);
+    font-family: Arial, sans-serif;
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -14,42 +14,42 @@ body {
 }
 
 #title {
-    color: #333; /* Color del texto del título */
-    font-size: 4rem; /* Tamaño de fuente del título */
-    margin-top: 2rem; /* Espacio superior */
-    text-align: center; /* Centrar el título */
-    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3); /* Sombra de texto */
+    color: #333;
+    font-size: 4rem;
+    margin-top: 2rem;
+    text-align: center;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
 }
 
 .button-container {
-    margin-top: 2rem; /* Espacio superior para los botones */
+    margin-top: 2rem;
 }
 
 button.center {
-    display: block; /* Hacer que los botones sean elementos de bloque */
-    width: 14rem; /* Ancho de los botones */
-    height: 5rem; /* Altura de los botones */
-    margin: 0 auto 2rem; /* Margen inferior para separar los botones */
-    background-image: linear-gradient(to bottom, #52be56, #38923c); /* Gradiente para los botones */
-    color: #f0f0f0; /* Color del texto del botón (mismo color que el fondo) */
-    font-size: 1.8rem; /* Tamaño de fuente */
-    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif; /* Otra fuente */
-    border: none; /* Sin borde */
-    border-radius: 20px; /* Bordes más redondeados */
-    cursor: pointer; /* Cambia el cursor al pasar sobre el botón */
-    transition: background-color 0.3s, box-shadow 0.3s; /* Transiciones suaves */
-    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2); /* Sombra */
-    outline: none; /* Sin contorno */
+    display: block;
+    width: 14rem;
+    height: 5rem;
+    margin: 0 auto 2rem;
+    background-image: linear-gradient(to bottom, #52be56, #38923c);
+    color: #f0f0f0;
+    font-size: 1.8rem;
+    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+    border: none;
+    border-radius: 20px;
+    cursor: pointer;
+    transition: background-color 0.3s, box-shadow 0.3s;
+    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
+    outline: none;
 }
 
 button.center:hover {
-    background-image: linear-gradient(to bottom, #45a049, #357c37); /* Cambia el gradiente al pasar sobre el botón */
+    background-image: linear-gradient(to bottom, #45a049, #357c37);
 }
 
 button.center:active {
-    background-image: linear-gradient(to bottom, #3e8e41, #2f6f2d); /* Cambia el gradiente al hacer clic en el botón */
-    transform: translateY(2px); /* Efecto de clic */
-    box-shadow: none; /* Elimina la sombra al hacer clic */
+    background-image: linear-gradient(to bottom, #3e8e41, #2f6f2d);
+    transform: translateY(2px);
+    box-shadow: none;
 }
 
 .button-container::after {
