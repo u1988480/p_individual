@@ -1,28 +1,36 @@
 #!/usr/bin/php-cgi
 <?php
+    // Iniciem la sessió
     session_start();
+
+    // Decodifiquem les dades rebudes
     $_POST = json_decode(file_get_contents('php://input'), true);
 
-    $_SESSION['uuid'] = $_POST['uuid'];
-    $_SESSION['pairs'] = $_POST['pairs'];
-    $_SESSION['points'] = $_POST['points'];
-    $_SESSION['cards'] = $_POST['cards'];
+    // Assignem les dades rebudes a variables
+    $uuid = $_POST['uuid'];
+    $pairs = $_POST['pairs'];
+    $points = $_POST['points'];
+    $cards = json_encode($_POST['cards']);
 
-    $encodeCards = json_encode($_SESSION['cards']);
+    // Connexió a la base de dades (heu de substituir les credencials)
+    $conn = oci_connect('u1988480', 'tphqjcvm', 'ORCLCDB');
 
-    $conn = oci_connect('**********', '*********', 'ORCLCDB');
-    $insert="INSERT INTO memory_save
-    (uuid, pairs, points, cards )
-    VALUES
-    (:uuid, :pairs, :points, :cards )";
+    // Preparem la comanda SQL per a la inserció
+    $insert = "INSERT INTO memory_save (uuid, pairs, points, cards) VALUES (:uuid, :pairs, :points, :cards)";
     $comanda = oci_parse($conn, $insert);
-    oci_bind_by_name($comanda,":uuid", $_SESSION['uuid']);
-    oci_bind_by_name($comanda,":pairs", $_SESSION['pairs']);
-    oci_bind_by_name($comanda,":points", $_SESSION['points']);
-    oci_bind_by_name($comanda,":cards", $encodeCards);
+
+    // Assignem els valors als paràmetres de la comanda
+    oci_bind_by_name($comanda, ":uuid", $uuid);
+    oci_bind_by_name($comanda, ":pairs", $pairs);
+    oci_bind_by_name($comanda, ":points", $points);
+    oci_bind_by_name($comanda, ":cards", $cards);
+
+    // Executem la comanda SQL
     oci_execute($comanda);
-    # Pujar a la base de dades
+
+    // Tanquem la connexió amb la base de dades
+    oci_close($conn);
+
+    // Retornem una resposta indicant que s'ha guardat la partida
     echo json_encode(true);
 ?>
-
-
