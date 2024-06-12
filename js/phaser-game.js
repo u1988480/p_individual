@@ -25,6 +25,37 @@ let points;
 let miss;
 let time;
 let pointsText;
+let mode = localStorage.getItem('gameMode') || '1'; // Leer el modo de juego
+let level = 2; // Nivel inicial para el modo 2
+let totalPoints = 0; // Puntos totales para el modo 2
+let ranking = JSON.parse(localStorage.getItem('ranking')) || [];
+
+function saveRanking() {
+    ranking.push(totalPoints);
+    ranking.sort((a, b) => b - a); // Ordenar de mayor a menor
+    ranking = ranking.slice(0, 10); // Mantener solo los 10 mejores puntajes
+    localStorage.setItem('ranking', JSON.stringify(ranking));
+}
+
+function displayRanking(scene) {
+    let y = 200;
+    scene.add.text(16, y, "RÁNKING:", { 
+        fontSize: '32px',
+        fill: '#000', 
+        fontFamily: 'Kanit, sans-serif',
+        align: 'center'
+    }).setOrigin(0, 0);
+
+    ranking.forEach((score, index) => {
+        y += 40;
+        scene.add.text(16, y, `${index + 1}. ${score} puntos`, { 
+            fontSize: '32px',
+            fill: '#000', 
+            fontFamily: 'Kanit, sans-serif',
+            align: 'center'
+        }).setOrigin(0, 0);
+    });
+}
 
 function preload() {
     this.load.image('background', '../resources/background.png');
@@ -42,23 +73,38 @@ function create() {
 
     const resources = ['cb', 'co', 'sb', 'so', 'tb', 'to'];
 
-    let options = JSON.parse(localStorage.getItem('options')) || { pairs: 2, difficulty: 'normal' };
+    let options = JSON.parse(localStorage.getItem('options')) || { pairs: 2, difficulty: 'normal', level: 'level2' };
 
-    pairsLeft = options.pairs;
-    points = 100;
+    if (mode === '1') {
+        // Modo de juego 1
+        pairsLeft = options.pairs;
+        points = 100;
 
-    if (options.difficulty === 'easy') {
-        miss = 10;
-        time = 2000;
-    } else if (options.difficulty === 'hard') {
-        miss = 40;
-        time = 500;
+        if (options.difficulty === 'easy') {
+            miss = 10;
+            time = 2000;
+        } else if (options.difficulty === 'hard') {
+            miss = 40;
+            time = 500;
+        } else {
+            miss = 25;
+            time = 1000;
+        }
     } else {
-        miss = 25;
-        time = 1000;
+        // Modo de juego 2
+        let initialLevel = options.level;
+        level = parseInt(initialLevel.replace('level', ''));
+        pairsLeft = Math.min(6, 1 + level); // Aumentar el número de pares con el nivel
+        points = 100;
+        miss = 15 + level * 5; // Aumentar la penalización con el nivel
+        time = 1000 - level * 100; // Reducir el tiempo con el nivel
+        if (mode === '2') {
+            this.time.delayedCall(time, () => {
+                displayRanking(this);
+            });
+        }
     }
 
-    // Seleccionar pares de cartas aleatoriamente y mezclar el array
     let items = Phaser.Utils.Array.Shuffle(resources.slice()).slice(0, pairsLeft);
     items = Phaser.Utils.Array.Shuffle(items.concat(items)); // Mezclar el array duplicado
 
@@ -94,13 +140,29 @@ function create() {
         });
     });
 
-        // Cambiar la fuente del texto de los puntos
-    pointsText = this.add.text(16, 16, 'PUNTOS: 100', { 
+
+    pointsText = this.add.text(16, 16, `PUNTOS: ${points}`, { 
         fontSize: '32px',
         fill: '#000', 
-        fontFamily: "Kanit, sans-serif",
+        fontFamily: 'Kanit, sans-serif',
         align: 'center'
-    }).setOrigin(0, 0); // Establecer origen al centro
+    }).setOrigin(0, 0);
+
+    if (mode === '2') {
+        this.add.text(16, 56, `NIVEL: ${level}`, { 
+            fontSize: '32px',
+            fill: '#000', 
+            fontFamily: 'Kanit, sans-serif',
+            align: 'center'
+        }).setOrigin(0, 0);
+
+        this.add.text(16, 96, `PUNTOS TOTALES: ${totalPoints}`, { 
+            fontSize: '32px',
+            fill: '#000', 
+            fontFamily: 'Kanit, sans-serif',
+            align: 'center'
+        }).setOrigin(0, 0);
+    }
 }
 
 function update() {
@@ -126,8 +188,14 @@ function flipCard(scene, card) {
                 pairsLeft--;
 
                 if (pairsLeft === 0) {
-                    alert("¡Has ganado con " + points + " puntos!");
-                    window.location.replace("../");
+                    if (mode === '1') {
+                        alert("¡Has ganado con " + points + " puntos!");
+                        window.location.assign("../");
+                    } else {
+                        totalPoints += points;
+                        level++;
+                        this.scene.restart();
+                    }
                 }
             } else {
                 firstCard.setTexture('back');
@@ -135,10 +203,13 @@ function flipCard(scene, card) {
                 firstCard.isFlipped = false;
                 secondCard.isFlipped = false;
                 points -= miss;
-                pointsText.setText('Puntos: ' + points);
+                pointsText.setText(`PUNTOS: ${points}`);
 
                 if (points <= 0) {
                     alert("Has perdido");
+                    if (mode === '2') {
+                        saveRanking();
+                    }
                     window.location.replace("../");
                 }
             }
