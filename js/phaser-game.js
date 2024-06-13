@@ -31,10 +31,12 @@ let totalPoints = 0; // Puntos totales para el modo 2
 let ranking = JSON.parse(localStorage.getItem('ranking')) || [];
 
 function saveRanking() {
-    ranking.push(totalPoints);
-    ranking.sort((a, b) => b - a); // Ordenar de mayor a menor
-    ranking = ranking.slice(0, 10); // Mantener solo los 10 mejores puntajes
-    localStorage.setItem('ranking', JSON.stringify(ranking));
+    if (totalPoints > 0) {  // Solo añadir al ranking si la puntuación es mayor que 0
+        ranking.push(totalPoints);
+        ranking.sort((a, b) => b - a); // Ordenar de mayor a menor
+        ranking = ranking.slice(0, 10); // Mantener solo los 10 mejores puntajes
+        localStorage.setItem('ranking', JSON.stringify(ranking));
+    }
 }
 
 function displayRanking(scene) {
@@ -58,7 +60,6 @@ function displayRanking(scene) {
 }
 
 function preload() {
-    this.load.image('background', '../resources/background.png');
     this.load.image('back', '../resources/back.png');
     this.load.image('cb', '../resources/cb.png');
     this.load.image('co', '../resources/co.png');
@@ -69,7 +70,6 @@ function preload() {
 }
 
 function create() {
-    this.add.image('background').setDisplaySize(window.innerWidth, window.innerHeight);
 
     const resources = ['cb', 'co', 'sb', 'so', 'tb', 'to'];
 
@@ -92,8 +92,7 @@ function create() {
         }
     } else {
         // Modo de juego 2
-        let initialLevel = options.level;
-        level = parseInt(initialLevel.replace('level', ''));
+        level = parseInt(localStorage.getItem('currentLevel')) || parseInt(options.level.replace('level', '')); // Leer el nivel actual desde localStorage o inicializarlo
         pairsLeft = Math.min(6, 1 + level); // Aumentar el número de pares con el nivel
         points = 100;
         miss = 15 + level * 5; // Aumentar la penalización con el nivel
@@ -138,7 +137,7 @@ function create() {
             card.isFlipped = false;
             card.clickable = true;
         });
-    });
+    });    
 
 
     pointsText = this.add.text(16, 16, `PUNTOS: ${points}`, { 
@@ -193,8 +192,15 @@ function flipCard(scene, card) {
                         window.location.assign("../");
                     } else {
                         totalPoints += points;
-                        level++;
-                        this.scene.restart();
+                        if (level < 5) {
+                            level++;
+                            localStorage.setItem('currentLevel', level); // Guardar el nivel actual
+                            scene.scene.restart(); // Reiniciar la escena para cargar el siguiente nivel
+                        } else {
+                            alert("¡Has completado todos los niveles con " + totalPoints + " puntos!");
+                            saveRanking();
+                            window.location.assign("../");
+                        }
                     }
                 }
             } else {
@@ -210,7 +216,7 @@ function flipCard(scene, card) {
                     if (mode === '2') {
                         saveRanking();
                     }
-                    window.location.replace("../");
+                    window.location.assign("../");
                 }
             }
 
