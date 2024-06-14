@@ -12,6 +12,7 @@ document.addEventListener('DOMContentLoaded', function () {
             <p>Puntos Totales: ${savedGame.totalPoints}</p>
             <button onclick="loadPartida()">Cargar</button>
         </div>`;
+        
     } else {
         partidasList.innerHTML = '<p>No hay partidas guardadas</p>';
     }
