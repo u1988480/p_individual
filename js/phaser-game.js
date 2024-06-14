@@ -39,26 +39,6 @@ function saveRanking() {
     }
 }
 
-function displayRanking(scene) {
-    let y = 200;
-    scene.add.text(16, y, "RÁNKING:", { 
-        fontSize: '32px',
-        fill: '#000', 
-        fontFamily: 'Kanit, sans-serif',
-        align: 'center'
-    }).setOrigin(0, 0);
-
-    ranking.forEach((score, index) => {
-        y += 40;
-        scene.add.text(16, y, `${index + 1}. ${score} puntos`, { 
-            fontSize: '32px',
-            fill: '#000', 
-            fontFamily: 'Kanit, sans-serif',
-            align: 'center'
-        }).setOrigin(0, 0);
-    });
-}
-
 function preload() {
     this.load.image('back', '../resources/back.png');
     this.load.image('cb', '../resources/cb.png');
@@ -92,16 +72,19 @@ function create() {
         }
     } else {
         // Modo de juego 2
-        level = parseInt(localStorage.getItem('currentLevel')) || parseInt(options.level.replace('level', '')); // Leer el nivel actual desde localStorage o inicializarlo
+        let storedLevel = sessionStorage.getItem('currentLevel');
+        if (storedLevel === null) {
+            // Si no hay un nivel actual guardado, usar el nivel inicial de las opciones
+            level = parseInt(options.level.replace('level', ''));
+            sessionStorage.setItem('currentLevel', level); // Guardar el nivel inicial
+        } else {
+            level = parseInt(storedLevel); // Usar el nivel actual guardado
+        }
         pairsLeft = Math.min(6, 1 + level); // Aumentar el número de pares con el nivel
         points = 100;
         miss = 15 + level * 5; // Aumentar la penalización con el nivel
         time = 1000 - level * 100; // Reducir el tiempo con el nivel
-        if (mode === '2') {
-            this.time.delayedCall(time, () => {
-                displayRanking(this);
-            });
-        }
+        localStorage.setItem('currentLevel', level); // Guardar el nivel actual
     }
 
     let items = Phaser.Utils.Array.Shuffle(resources.slice()).slice(0, pairsLeft);
@@ -162,6 +145,7 @@ function create() {
             align: 'center'
         }).setOrigin(0, 0);
     }
+
 }
 
 function update() {
@@ -194,13 +178,10 @@ function flipCard(scene, card) {
                         totalPoints += points;
                         if (level < 5) {
                             level++;
-                            localStorage.setItem('currentLevel', level); // Guardar el nivel actual
-                            scene.scene.restart(); // Reiniciar la escena para cargar el siguiente nivel
-                        } else {
-                            alert("¡Has completado todos los niveles con " + totalPoints + " puntos!");
-                            saveRanking();
-                            window.location.assign("../");
                         }
+                        
+                        sessionStorage.setItem('currentLevel', level); // Guardar el nivel actual
+                        scene.scene.restart(); // Reiniciar la escena para cargar el siguiente nivel
                     }
                 }
             } else {
@@ -215,6 +196,8 @@ function flipCard(scene, card) {
                     alert("Has perdido");
                     if (mode === '2') {
                         saveRanking();
+                        sessionStorage.removeItem('currentLevel'); // Eliminar el nivel actual de sessionStorage
+                        window.location.assign("../html/ranking.html"); // Redirigir a la página de ranking
                     }
                     window.location.assign("../");
                 }

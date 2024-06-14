@@ -39,5 +39,7 @@ $('#default').on('click', function() {
 
 $('#apply').on('click', function() {
     options.applyChanges();
+    sessionStorage.removeItem('currentLevel'); // Restablecer el nivel actual
     location.assign("../");
 });
+
