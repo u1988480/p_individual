@@ -25,10 +25,13 @@ let points;
 let miss;
 let time;
 let pointsText;
+let levelText; // Definir globalmente
+let totalPointsText; // Definir globalmente
 let mode = localStorage.getItem('gameMode') || '1'; // Leer el modo de juego
 let level = 2; // Nivel inicial para el modo 2
 let totalPoints = 0; // Puntos totales para el modo 2
 let ranking = JSON.parse(localStorage.getItem('ranking')) || [];
+let currentGameId = null; // ID de la partida actual
 
 function saveRanking() {
     if (totalPoints > 0) {  // Solo añadir al ranking si la puntuación es mayor que 0
@@ -36,6 +39,67 @@ function saveRanking() {
         ranking.sort((a, b) => b - a); // Ordenar de mayor a menor
         ranking = ranking.slice(0, 10); // Mantener solo los 10 mejores puntajes
         localStorage.setItem('ranking', JSON.stringify(ranking));
+    }
+}
+
+function saveGame() {
+    const gameId = currentGameId || new Date().getTime(); // Usar ID existente o crear uno nuevo
+    const gameState = {
+        id: gameId,
+        cards: cards.children.entries.map(card => ({ front: card.front, isFlipped: card.isFlipped })),
+        firstCardIndex: firstCard ? firstCard.index : null,
+        secondCardIndex: secondCard ? secondCard.index : null,
+        canFlip,
+        pairsLeft,
+        points,
+        mode,
+        level,
+        totalPoints
+    };
+    let savedGames = JSON.parse(localStorage.getItem('savedGames')) || [];
+    const existingGameIndex = savedGames.findIndex(game => game.id === gameId);
+    if (existingGameIndex !== -1) {
+        // Sobrescribir la partida existente
+        savedGames[existingGameIndex] = gameState;
+    } else {
+        // Añadir una nueva partida
+        savedGames.push(gameState);
+    }
+    localStorage.setItem('savedGames', JSON.stringify(savedGames));
+    currentGameId = gameId; // Guardar el ID de la partida actual
+}
+
+function loadGame(gameId) {
+    let savedGames = JSON.parse(localStorage.getItem('savedGames'));
+    const savedGame = savedGames.find(game => game.id === gameId);
+    if (savedGame) {
+        // Restaura el estado del juego
+        savedGame.cards.forEach((cardState, index) => {
+            if (index < cards.children.entries.length) {
+                const card = cards.children.entries[index];
+                card.front = cardState.front;
+                card.isFlipped = cardState.isFlipped;
+                card.setTexture(card.isFlipped ? card.front : 'back');
+                card.setInteractive(); // Asegurar que las cartas sean interactivas
+                card.clickable = !cardState.isFlipped;
+            }
+        });
+        firstCard = savedGame.firstCardIndex !== null ? cards.children.entries[savedGame.firstCardIndex] : null;
+        secondCard = savedGame.secondCardIndex !== null ? cards.children.entries[savedGame.secondCardIndex] : null;
+        canFlip = savedGame.canFlip;
+        pairsLeft = savedGame.pairsLeft;
+        points = savedGame.points;
+        mode = savedGame.mode;
+        level = savedGame.level;
+        totalPoints = savedGame.totalPoints;
+        currentGameId = savedGame.id; // Guardar el ID de la partida actual
+
+        // Actualizar texto de puntos y puntos totales
+        pointsText.setText(`PUNTOS: ${points}`);
+        if (mode === '2') {
+            levelText.setText(`NIVEL: ${level}`);
+            totalPointsText.setText(`PUNTOS TOTALES: ${totalPoints}`);
+        }
     }
 }
 
@@ -80,11 +144,11 @@ function create() {
         } else {
             level = parseInt(storedLevel); // Usar el nivel actual guardado
         }
+        
         pairsLeft = Math.min(6, 1 + level); // Aumentar el número de pares con el nivel
         points = 100;
         miss = 15 + level * 5; // Aumentar la penalización con el nivel
-        time = 1000 - level * 100; // Reducir el tiempo con el nivel
-        localStorage.setItem('currentLevel', level); // Guardar el nivel actual
+        time = Math.max(500, 1000 - level * 100); // Reducir el tiempo con el nivel, mínimo 500 ms
     }
 
     let items = Phaser.Utils.Array.Shuffle(resources.slice()).slice(0, pairsLeft);
@@ -110,6 +174,7 @@ function create() {
         card.isFlipped = false;
         card.displayWidth = cardWidth;
         card.displayHeight = cardHeight;
+        card.index = index; // Guardar el índice de la carta
         card.on('pointerdown', () => flipCard(this, card));
         cards.add(card);
     });
@@ -120,8 +185,7 @@ function create() {
             card.isFlipped = false;
             card.clickable = true;
         });
-    });    
-
+    });
 
     pointsText = this.add.text(16, 16, `PUNTOS: ${points}`, { 
         fontSize: '32px',
@@ -131,14 +195,14 @@ function create() {
     }).setOrigin(0, 0);
 
     if (mode === '2') {
-        this.add.text(16, 56, `NIVEL: ${level}`, { 
+        levelText = this.add.text(16, 56, `NIVEL: ${level}`, { 
             fontSize: '32px',
             fill: '#000', 
             fontFamily: 'Kanit, sans-serif',
             align: 'center'
         }).setOrigin(0, 0);
 
-        this.add.text(16, 96, `PUNTOS TOTALES: ${totalPoints}`, { 
+        totalPointsText = this.add.text(16, 96, `PUNTOS TOTALES: ${totalPoints}`, { 
             fontSize: '32px',
             fill: '#000', 
             fontFamily: 'Kanit, sans-serif',
@@ -146,6 +210,15 @@ function create() {
         }).setOrigin(0, 0);
     }
 
+    // Cargar el juego guardado solo si venimos de la página de partidas
+    const savedGameId = sessionStorage.getItem('loadSavedGame');
+    if (savedGameId) {
+        loadGame(parseInt(savedGameId));
+        sessionStorage.removeItem('loadSavedGame');
+    }
+
+    // Añadir evento al botón de guardar
+    document.getElementById('save-game').addEventListener('click', saveGame);
 }
 
 function update() {
@@ -178,10 +251,15 @@ function flipCard(scene, card) {
                         totalPoints += points;
                         if (level < 5) {
                             level++;
+                            sessionStorage.setItem('currentLevel', level); // Guardar el nivel actual
+                            saveGame(); // Guardar el juego antes de reiniciar la escena
+                            scene.scene.restart(); // Reiniciar la escena para cargar el siguiente nivel
+                        } else {
+                            alert("¡Has completado todos los niveles con " + totalPoints + " puntos!");
+                            saveRanking();
+                            sessionStorage.removeItem('currentLevel'); // Eliminar el nivel actual de sessionStorage
+                            window.location.assign("../html/ranking.html"); // Redirigir a la página de ranking
                         }
-                        
-                        sessionStorage.setItem('currentLevel', level); // Guardar el nivel actual
-                        scene.scene.restart(); // Reiniciar la escena para cargar el siguiente nivel
                     }
                 }
             } else {
@@ -195,7 +273,7 @@ function flipCard(scene, card) {
                 if (points <= 0) {
                     alert("Has perdido");
                     if (mode === '2') {
-                        saveRanking();
+                        saveRanking(); // Llamar a saveRanking
                         sessionStorage.removeItem('currentLevel'); // Eliminar el nivel actual de sessionStorage
                         window.location.assign("../html/ranking.html"); // Redirigir a la página de ranking
                     }
