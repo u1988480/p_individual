@@ -34,16 +34,20 @@ let ranking = JSON.parse(localStorage.getItem('ranking')) || [];
 let currentGameId = null; // ID de la partida actual
 
 function saveRanking() {
-    if (totalPoints > 0) {  // Solo añadir al ranking si la puntuación es mayor que 0
-        ranking.push(totalPoints);
-        ranking.sort((a, b) => b - a); // Ordenar de mayor a menor
-        ranking = ranking.slice(0, 10); // Mantener solo los 10 mejores puntajes
-        localStorage.setItem('ranking', JSON.stringify(ranking));
+    if (totalPoints > 0) { // Only add to the ranking if the score is greater than 0
+        let ranking = JSON.parse(localStorage.getItem('ranking')) || [];
+        
+        if (!ranking.includes(totalPoints)) {
+            ranking.push(totalPoints);
+            ranking.sort((a, b) => b - a); // Sort from highest to lowest
+            ranking = ranking.slice(0, 10); // Keep only the top 10 scores
+            localStorage.setItem('ranking', JSON.stringify(ranking));
+        }
     }
 }
 
 function saveGame() {
-    const gameId = currentGameId || new Date().getTime(); // Usar ID existente o crear uno nuevo
+    const gameId = currentGameId || new Date().getTime(); // Use existing ID or create a new one
     const gameState = {
         id: gameId,
         cards: cards.children.entries.map(card => ({ front: card.front, isFlipped: card.isFlipped })),
@@ -59,28 +63,28 @@ function saveGame() {
     let savedGames = JSON.parse(localStorage.getItem('savedGames')) || [];
     const existingGameIndex = savedGames.findIndex(game => game.id === gameId);
     if (existingGameIndex !== -1) {
-        // Sobrescribir la partida existente
+        // Overwrite existing game
         savedGames[existingGameIndex] = gameState;
     } else {
-        // Añadir una nueva partida
+        // Add new game
         savedGames.push(gameState);
     }
     localStorage.setItem('savedGames', JSON.stringify(savedGames));
-    currentGameId = gameId; // Guardar el ID de la partida actual
+    currentGameId = gameId; // Save the current game ID
 }
 
 function loadGame(gameId) {
     let savedGames = JSON.parse(localStorage.getItem('savedGames'));
     const savedGame = savedGames.find(game => game.id === gameId);
     if (savedGame) {
-        // Restaura el estado del juego
+        // Restore the game state
         savedGame.cards.forEach((cardState, index) => {
             if (index < cards.children.entries.length) {
                 const card = cards.children.entries[index];
                 card.front = cardState.front;
                 card.isFlipped = cardState.isFlipped;
                 card.setTexture(card.isFlipped ? card.front : 'back');
-                card.setInteractive(); // Asegurar que las cartas sean interactivas
+                card.setInteractive(); // Ensure cards are interactive
                 card.clickable = !cardState.isFlipped;
             }
         });
@@ -92,9 +96,9 @@ function loadGame(gameId) {
         mode = savedGame.mode;
         level = savedGame.level;
         totalPoints = savedGame.totalPoints;
-        currentGameId = savedGame.id; // Guardar el ID de la partida actual
+        currentGameId = savedGame.id; // Save the current game ID
 
-        // Actualizar texto de puntos y puntos totales
+        // Update points and total points text
         pointsText.setText(`PUNTOS: ${points}`);
         if (mode === '2') {
             levelText.setText(`NIVEL: ${level}`);
@@ -102,6 +106,7 @@ function loadGame(gameId) {
         }
     }
 }
+
 
 function preload() {
     this.load.image('back', '../resources/back.png');
@@ -120,7 +125,7 @@ function create() {
     let options = JSON.parse(localStorage.getItem('options')) || { pairs: 2, difficulty: 'normal', level: 'level2' };
 
     if (mode === '1') {
-        // Modo de juego 1
+        // Game mode 1
         pairsLeft = options.pairs;
         points = 100;
 
@@ -135,24 +140,24 @@ function create() {
             time = 1000;
         }
     } else {
-        // Modo de juego 2
+        // Game mode 2
         let storedLevel = sessionStorage.getItem('currentLevel');
         if (storedLevel === null) {
-            // Si no hay un nivel actual guardado, usar el nivel inicial de las opciones
+            // If no current level is stored, use the initial level from options
             level = parseInt(options.level.replace('level', ''));
-            sessionStorage.setItem('currentLevel', level); // Guardar el nivel inicial
+            sessionStorage.setItem('currentLevel', level); // Save the initial level
         } else {
-            level = parseInt(storedLevel); // Usar el nivel actual guardado
+            level = parseInt(storedLevel); // Use the stored current level
         }
-        
-        pairsLeft = Math.min(6, 1 + level); // Aumentar el número de pares con el nivel
+
+        pairsLeft = Math.min(6, 1 + level); // Increase the number of pairs with the level
         points = 100;
-        miss = 15 + level * 5; // Aumentar la penalización con el nivel
-        time = Math.max(500, 1000 - level * 100); // Reducir el tiempo con el nivel, mínimo 500 ms
+        miss = 15 + level * 5; // Increase the penalty with the level
+        time = Math.max(500, 1000 - level * 100); // Reduce the time with the level, minimum 500 ms
     }
 
     let items = Phaser.Utils.Array.Shuffle(resources.slice()).slice(0, pairsLeft);
-    items = Phaser.Utils.Array.Shuffle(items.concat(items)); // Mezclar el array duplicado
+    items = Phaser.Utils.Array.Shuffle(items.concat(items)); // Shuffle the duplicated array
 
     cards = this.add.group();
 
@@ -174,7 +179,7 @@ function create() {
         card.isFlipped = false;
         card.displayWidth = cardWidth;
         card.displayHeight = cardHeight;
-        card.index = index; // Guardar el índice de la carta
+        card.index = index; // Save the card index
         card.on('pointerdown', () => flipCard(this, card));
         cards.add(card);
     });
@@ -210,16 +215,17 @@ function create() {
         }).setOrigin(0, 0);
     }
 
-    // Cargar el juego guardado solo si venimos de la página de partidas
+    // Load the saved game only if we came from the saved games page
     const savedGameId = sessionStorage.getItem('loadSavedGame');
     if (savedGameId) {
         loadGame(parseInt(savedGameId));
         sessionStorage.removeItem('loadSavedGame');
     }
 
-    // Añadir evento al botón de guardar
+    // Add event to the save button
     document.getElementById('save-game').addEventListener('click', saveGame);
 }
+
 
 function update() {
     // Lógica del bucle del juego, si es necesario
@@ -274,7 +280,9 @@ function flipCard(scene, card) {
                     alert("Has perdido");
                     if (mode === '2') {
                         saveRanking(); // Llamar a saveRanking
-                        sessionStorage.removeItem('currentLevel'); // Eliminar el nivel actual de sessionStorage
+                        if (!currentGameId){
+                            sessionStorage.removeItem('currentLevel'); // Eliminar el nivel actual de sessionStorage
+                        }
                         window.location.assign("../html/ranking.html"); // Redirigir a la página de ranking
                     }
                     window.location.assign("../");

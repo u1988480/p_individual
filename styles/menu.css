@@ -5,7 +5,7 @@ html, body {
 }
 
 body {
-    background-image: linear-gradient(to bottom, #f0f0f0, #c0c0c0);
+    background-image: #f0f0f0;
     font-family: Arial, sans-serif;
     display: flex;
     flex-direction: column;
