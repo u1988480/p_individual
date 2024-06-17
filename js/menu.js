@@ -2,7 +2,6 @@ addEventListener('load', function() {
     document.getElementById('play').addEventListener('click', function(){
         localStorage.removeItem('savedGame'); // Eliminar partida guardada
         window.location.assign("./html/mode.html");
-        localStorage.clear
     });
 
     document.getElementById('options').addEventListener('click', function(){
